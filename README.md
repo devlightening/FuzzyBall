@@ -4,7 +4,7 @@
 
 **NEO-FOOTBALL** is a futuristic football analytics engine that predicts Premier League match outcomes using **Fuzzy Logic (Mamdani Inference System)**. Unlike traditional statistical models that rely solely on hard numbers, this project mimics human reasoning to evaluate team performance, risk factors, and match atmosphere.
 
-🔗 **[Live Demo](https://www.google.com/search?q=https://fuzzyball-predictor.streamlit.app)** *(Kendi linkini buraya yapıştır)*
+🔗 **[Live Demo]([https://www.google.com/search?q=https://fuzzyball-predictor.streamlit.app](https://fuzzyball-predictor.streamlit.app/))**
 
 ---
 
