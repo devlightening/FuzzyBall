@@ -3,29 +3,27 @@ import skfuzzy as fuzz
 from skfuzzy import control as ctrl
 
 # =============================================================================
-# MAMDANI ÇIKARIM MEKANİZMASI (3 INPUT -> 1 OUTPUT)
+# SİSTEM 1: MAÇ SONUCU TAHMİNİ (MAMDANI - 3 GİRDİ)
 # =============================================================================
 
 # --- GİRDİLER (INPUTS) ---
-# 0-10 Puan arası normalize edilmiş veriler
-
-# Grafik 1: Form Durumu (Son 5 Maç)
+# Form (0-10)
 form = ctrl.Antecedent(np.arange(0, 11, 1), 'form')
 form['kotu'] = fuzz.trimf(form.universe, [0, 0, 4])
 form['orta'] = fuzz.trimf(form.universe, [3, 5, 7])
 form['iyi']  = fuzz.trimf(form.universe, [6, 10, 10])
 
-# Grafik 2: Lig Sıralaması
+# Sıralama (0-10)
 rank = ctrl.Antecedent(np.arange(0, 11, 1), 'rank')
-rank['dusuk']  = fuzz.trimf(rank.universe, [0, 0, 4])   # Alt sıralar
-rank['orta']   = fuzz.trimf(rank.universe, [3, 5, 7])   # Orta sıralar
-rank['yuksek'] = fuzz.trimf(rank.universe, [6, 10, 10]) # Zirve takımları
+rank['dusuk']  = fuzz.trimf(rank.universe, [0, 0, 4])
+rank['orta']   = fuzz.trimf(rank.universe, [3, 5, 7])
+rank['yuksek'] = fuzz.trimf(rank.universe, [6, 10, 10])
 
-# Grafik 3: Gol Ortalaması
+# Gol Ortalaması (0-10)
 goals = ctrl.Antecedent(np.arange(0, 11, 1), 'goals')
-goals['kisir']  = fuzz.trimf(goals.universe, [0, 0, 4])   # Az gol atıyor
-goals['normal'] = fuzz.trimf(goals.universe, [3, 5, 7])   # Normal
-goals['golcu']  = fuzz.trimf(goals.universe, [6, 10, 10]) # Çok gol atıyor
+goals['kisir']  = fuzz.trimf(goals.universe, [0, 0, 4])
+goals['normal'] = fuzz.trimf(goals.universe, [3, 5, 7])
+goals['golcu']  = fuzz.trimf(goals.universe, [6, 10, 10])
 
 # --- ÇIKTI (OUTPUT) ---
 result = ctrl.Consequent(np.arange(0, 11, 1), 'result')
@@ -33,46 +31,38 @@ result['maglubiyet'] = fuzz.trimf(result.universe, [0, 0, 4])
 result['beraberlik'] = fuzz.trimf(result.universe, [3, 5, 7])
 result['galibiyet']  = fuzz.trimf(result.universe, [6, 10, 10])
 
-# --- KURAL TABANI (MAMDANI RULES) ---
-# 3 Değişken olduğu için kombinasyonlar arttı. Mantıklı senaryoları yazıyoruz.
-
-rules = [
-    # --- GALİBİYET SENARYOLARI (GÜÇLÜ) ---
-    # Form İyi VE Sıralama Yüksek VE Golcü -> KESİN GALİBİYET
+# --- KURALLAR (MATCH RULES) ---
+match_rules = [
+    # Galibiyet Senaryoları
     ctrl.Rule(form['iyi'] & rank['yuksek'] & goals['golcu'], result['galibiyet']),
-    # Form İyi VE Sıralama Yüksek (Gol normal olsa bile) -> GALİBİYET
     ctrl.Rule(form['iyi'] & rank['yuksek'] & goals['normal'], result['galibiyet']),
-    # Sıralama Yüksek VE Golcü (Form orta olsa bile) -> GALİBİYET
     ctrl.Rule(form['orta'] & rank['yuksek'] & goals['golcu'], result['galibiyet']),
-
-    # --- BERABERLİK SENARYOLARI (DENGELİ) ---
-    # Her şey ortaysa -> BERABERLİK
+    
+    # Beraberlik Senaryoları
     ctrl.Rule(form['orta'] & rank['orta'] & goals['normal'], result['beraberlik']),
-    # Form İyi ama Sıralama Düşük (Sürpriz takım) -> BERABERLİK
-    ctrl.Rule(form['iyi'] & rank['dusuk'], result['beraberlik']),
-    # Güçlü takım ama Form Kötü -> BERABERLİK
-    ctrl.Rule(rank['yuksek'] & form['kotu'], result['beraberlik']),
-    # Takım gol atamıyorsa (Kısır) -> BERABERLİK ihtimali artar
-    ctrl.Rule(rank['orta'] & goals['kisir'], result['beraberlik']),
-
-    # --- MAĞLUBİYET SENARYOLARI (ZAYIF) ---
-    # Form Kötü VE Sıralama Düşük -> MAĞLUBİYET
+    ctrl.Rule(form['iyi'] & rank['dusuk'], result['beraberlik']), # Sürpriz
+    ctrl.Rule(rank['yuksek'] & form['kotu'], result['beraberlik']), # Favori formsuzsa
+    ctrl.Rule(goals['kisir'], result['beraberlik']), # Kimse atamıyorsa
+    
+    # Mağlubiyet Senaryoları
     ctrl.Rule(form['kotu'] & rank['dusuk'], result['maglubiyet']),
-    # Sıralama Düşük VE Gol Atamıyor -> MAĞLUBİYET
     ctrl.Rule(rank['dusuk'] & goals['kisir'], result['maglubiyet']),
-    # Form Kötü VE Gol Kısır -> MAĞLUBİYET
     ctrl.Rule(form['kotu'] & goals['kisir'], result['maglubiyet']),
 ]
 
-# Sistemi Kur
-match_ctrl = ctrl.ControlSystem(rules)
+match_ctrl = ctrl.ControlSystem(match_rules)
 match_sim = ctrl.ControlSystemSimulation(match_ctrl)
 
-# --- EKSTRA: KART VE KAOS SİSTEMİ (OPSİYONEL OLARAK KALDI) ---
+
+# =============================================================================
+# SİSTEM 2: KART VE KAOS (Eksik Kurallar Tamamlandı)
+# =============================================================================
+
 aggression = ctrl.Antecedent(np.arange(0, 11, 1), 'aggression')
 tension = ctrl.Antecedent(np.arange(0, 11, 1), 'tension')
 chaos = ctrl.Consequent(np.arange(0, 11, 1), 'chaos')
 
+# Üyelik Fonksiyonları
 aggression['sakin'] = fuzz.trimf(aggression.universe, [0, 0, 4])
 aggression['sert']  = fuzz.trimf(aggression.universe, [3, 5, 7])
 aggression['vahsi'] = fuzz.trimf(aggression.universe, [6, 10, 10])
@@ -85,14 +75,22 @@ chaos['temiz'] = fuzz.trimf(chaos.universe, [0, 0, 4])
 chaos['normal']= fuzz.trimf(chaos.universe, [3, 5, 7])
 chaos['kirmizi']= fuzz.trimf(chaos.universe, [6, 10, 10])
 
+# --- GÜNCELLENMİŞ KURALLAR (HATA ÇIKARMAMASI İÇİN) ---
 card_rules = [
+    # Yüksek Kaos
     ctrl.Rule(aggression['vahsi'] & tension['final'], chaos['kirmizi']),
     ctrl.Rule(aggression['vahsi'] & tension['rekabet'], chaos['kirmizi']),
     ctrl.Rule(aggression['sert'] & tension['final'], chaos['kirmizi']),
+    
+    # Normal Kaos
     ctrl.Rule(aggression['sert'] & tension['rekabet'], chaos['normal']),
     ctrl.Rule(aggression['sakin'] & tension['final'], chaos['normal']),
-    ctrl.Rule(aggression['sakin'] & tension['dostluk'], chaos['temiz']),
+    ctrl.Rule(aggression['vahsi'] & tension['dostluk'], chaos['normal']),
     ctrl.Rule(aggression['sert'] & tension['dostluk'], chaos['normal']),
+    
+    # Temiz Maç (BURASI EKSİKTİ, EKLENDİ)
+    ctrl.Rule(aggression['sakin'] & tension['dostluk'], chaos['temiz']),
+    ctrl.Rule(aggression['sakin'] & tension['rekabet'], chaos['temiz']), # Bu kural eksikti!
 ]
 
 card_ctrl = ctrl.ControlSystem(card_rules)
