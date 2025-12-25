@@ -86,12 +86,10 @@ streamlit run app.py
 ## 📷 Screenshots
 
 ### 1. Dashboard & Comparison
-
-<img width="1917" height="791" alt="image" src="https://github.com/user-attachments/assets/e6821500-17a8-4f83-abd5-607aff86e897" />
-<img width="1832" height="756" alt="image" src="https://github.com/user-attachments/assets/4891d7df-5fbc-40a2-b876-b191367b1ca5" />
-<img width="1866" height="783" alt="image" src="https://github.com/user-attachments/assets/d186e00b-e3ce-4474-bfaa-a5e2fa5e31c3" />
-<img width="1769" height="819" alt="image" src="https://github.com/user-attachments/assets/ed553a80-6e80-44c4-8c1f-a1ee7006a7f7" />
-
+<img width="1917" height="769" alt="Predictor" src="https://github.com/user-attachments/assets/0f4af342-d139-4e25-b0aa-1f48e74fc5b7" />
+<img width="1827" height="745" alt="Result" src="https://github.com/user-attachments/assets/2419707a-796a-4a06-a9d5-192dbfd75a8c" />
+<img width="1866" height="784" alt="Statistics" src="https://github.com/user-attachments/assets/83269409-af56-47b1-96e0-ae977b91065a" />
+<img width="1753" height="815" alt="FuzzyGraphics" src="https://github.com/user-attachments/assets/0ab83d8c-1791-4fda-9a24-1824c4746f1c" />
 
 
 
