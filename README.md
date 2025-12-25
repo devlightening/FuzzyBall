@@ -96,6 +96,8 @@ streamlit run app.py
 
 <img width="1872" height="792" alt="Statistics" src="https://github.com/user-attachments/assets/c8c209d2-75d2-44ff-9a28-17c55216b3f9" />
 <img width="1908" height="812" alt="FuzzyGraphics" src="https://github.com/user-attachments/assets/aa3a1216-41a0-4995-b9df-ad95213187ce" />
+<img width="1703" height="735" alt="FuzzyGraphics2" src="https://github.com/user-attachments/assets/9e63d158-2802-4c95-be1c-1c38075baf93" />
+
 
 
 ---
