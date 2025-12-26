@@ -1,6 +1,7 @@
 import os
 import sys
 
+# SSL Hatalarını Kökten Çözme
 if 'REQUESTS_CA_BUNDLE' in os.environ: del os.environ['REQUESTS_CA_BUNDLE']
 if 'CURL_CA_BUNDLE' in os.environ: del os.environ['CURL_CA_BUNDLE']
 
@@ -8,6 +9,7 @@ import pandas as pd
 import requests
 import streamlit as st
 import urllib3
+import random
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
@@ -24,9 +26,11 @@ def load_all_data():
         id_to_name = {}
         team_logos = {}
         team_players = {} 
+        all_player_images = [] # YENİ: Oyuncu resimlerini tutacak liste
 
         for t in data_static['teams']:
             t_name = t['name']
+            # İsim Düzeltmeleri
             if t_name == "Nottingham Forest": t_name = "Nott'm Forest"
             if t_name == "Wolverhampton Wanderers": t_name = "Wolves"
             if t_name == "Leicester City": t_name = "Leicester"
@@ -51,6 +55,12 @@ def load_all_data():
                     'status': p['status'], 
                     'chance': p['chance_of_playing_next_round']
                 })
+                
+                # YENİ: Sadece aktif ve fotoğrafı olan oyuncuları listeye ekle
+                # 'code' parametresi oyuncunun fotoğraf ismidir.
+                if p['minutes'] > 0: # Hiç oynamamış yedekleri alma
+                    photo_url = f"https://resources.premierleague.com/premierleague/photos/players/110x140/p{p['code']}.png"
+                    all_player_images.append(photo_url)
 
         r_fixtures = requests.get(API_FIXTURES, headers=headers, verify=False, timeout=20)
         data_fixtures = r_fixtures.json()
@@ -60,8 +70,10 @@ def load_all_data():
             if match['finished']:
                 h_name = id_to_name.get(match['team_h'], "Unknown")
                 a_name = id_to_name.get(match['team_a'], "Unknown")
+                
                 h_score = match['team_h_score']
                 a_score = match['team_a_score']
+                
                 hy, ay, hr, ar = 0, 0, 0, 0
                 for stat in match['stats']:
                     if stat['identifier'] == 'yellow_cards':
@@ -85,13 +97,15 @@ def load_all_data():
         df = pd.DataFrame(match_list)
         if not df.empty:
             df['Date'] = pd.to_datetime(df['Date']).dt.date
-        return df, team_logos, team_players
+            
+        return df, team_logos, team_players, all_player_images # YENİ LİSTEYİ DÖNDÜR
 
     except Exception as e:
         st.error(f"Veri Hatası: {e}")
-        return pd.DataFrame(), {}, {}
+        return pd.DataFrame(), {}, {}, []
 
 def get_advanced_stats(df, team_players, team, last_n=5):
+    # Bu fonksiyon aynen kalıyor, değişikliğe gerek yok
     matches = df[(df["HomeTeam"] == team) | (df["AwayTeam"] == team)].sort_values(by="Date")
     recent_matches = matches.tail(last_n)
     
@@ -106,10 +120,13 @@ def get_advanced_stats(df, team_players, team, last_n=5):
         is_home = row["HomeTeam"] == team
         my_score = row["FTHG"] if is_home else row["FTAG"]
         opp_score = row["FTAG"] if is_home else row["FTHG"]
+        
         scored += my_score
         conceded += opp_score
+        
         if my_score > opp_score: points += 3
         elif my_score == opp_score: points += 1
+        
         y = row["HY"] if is_home else row["AY"]
         r = row["HR"] if is_home else row["AR"]
         cards_weight += y + (r * 3)
@@ -134,11 +151,12 @@ def get_advanced_stats(df, team_players, team, last_n=5):
                 missing_count += 1
                 key_players_missing.append(p['web_name'])
 
-    # --- NORMALİZASYON ---
     norm_form = (points / (last_n * 3)) * 10
     norm_rank = max(0, (21 - rank) / 2)
+    
     avg_scored = scored / last_n if last_n > 0 else 0
     norm_goals = min((avg_scored / 2.5) * 10, 10)
+    
     avg_cards = cards_weight / last_n if last_n > 0 else 0
     norm_card_risk = min((avg_cards / 3) * 10, 10)
 

@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import time
 import pandas as pd
-import random  # <--- YENİ EKLENDİ (Rastgele ikonlar için)
+import random
 from data_utils import load_all_data, get_advanced_stats
 from fuzzy_system import match_sim, card_sim, form, rank, goals, result, aggression, tension, chaos
 
@@ -13,7 +13,7 @@ st.set_page_config(page_title="NEO-FOOTBALL ULTIMATE", page_icon="⚽", layout="
 # --- DİL SÖZLÜĞÜ (TRANSLATION DICTIONARY) ---
 TRANS = {
     "TR": {
-        "header_title": "NEO-PREDICTOR ULTIMATE",
+        "header_title": "FUZZYBED",
         "header_sub": "Yapay Zeka Destekli Futbol Analiz Motoru",
         "home": "EV SAHİBİ",
         "away": "DEPLASMAN",
@@ -51,7 +51,7 @@ TRANS = {
         "loading_error": "Veri kaynağına erişilemedi."
     },
     "EN": {
-        "header_title": "NEO-PREDICTOR ULTIMATE",
+        "header_title": "FUZZYBED",
         "header_sub": "AI Powered Football Analytics Engine",
         "home": "HOME TEAM",
         "away": "AWAY TEAM",
@@ -152,22 +152,28 @@ def plot_fuzzy_chart(var, sim, title, color_hex, val=None):
     ax.grid(False)
     return fig
 
-# --- SLOT MAKİNESİ (FREESPIN) EFEKTİ ---
-def run_slot_effect():
+# --- SLOT MAKİNESİ (FREESPIN) EFEKTİ - FOTOĞRAFLI ---
+def run_slot_effect(player_images):
     slot_container = st.empty()
-    # Slot ikonları (Futbol ve Şans karışık)
-    icons = ["⚽", "🥅", "🏆", "🔥", "❌", "💰", "🎲", "7️⃣", "🍒", "💎", "⚡"]
     
     # 20 kez hızlıca döndür
     for i in range(20):
-        c1, c2, c3 = random.sample(icons, 3)
+        # 3 Farklı rastgele oyuncu seç
+        c1, c2, c3 = random.sample(player_images, 3)
+        
         html_code = f"""
         <div style="display:flex; justify-content:center; gap:20px; margin: 30px 0;">
-            <div style="font-size:60px; background:rgba(255,255,255,0.1); padding:10px; border-radius:10px; border:2px solid #00f260; width:100px; text-align:center;">{c1}</div>
-            <div style="font-size:60px; background:rgba(255,255,255,0.1); padding:10px; border-radius:10px; border:2px solid #0575e6; width:100px; text-align:center;">{c2}</div>
-            <div style="font-size:60px; background:rgba(255,255,255,0.1); padding:10px; border-radius:10px; border:2px solid #fce803; width:100px; text-align:center;">{c3}</div>
+            <div style="background:rgba(255,255,255,0.05); padding:5px; border-radius:15px; border:2px solid #00f260; width:110px; height:120px; display:flex; align-items:center; justify-content:center;">
+                <img src="{c1}" style="width:100px; height:110px; object-fit:cover; border-radius:10px;">
+            </div>
+            <div style="background:rgba(255,255,255,0.05); padding:5px; border-radius:15px; border:2px solid #0575e6; width:110px; height:120px; display:flex; align-items:center; justify-content:center;">
+                <img src="{c2}" style="width:100px; height:110px; object-fit:cover; border-radius:10px;">
+            </div>
+            <div style="background:rgba(255,255,255,0.05); padding:5px; border-radius:15px; border:2px solid #fce803; width:110px; height:120px; display:flex; align-items:center; justify-content:center;">
+                <img src="{c3}" style="width:100px; height:110px; object-fit:cover; border-radius:10px;">
+            </div>
         </div>
-        <div style="text-align:center; font-family:'Orbitron'; color:#ccc; letter-spacing:3px;">ANALYZING...</div>
+        <div style="text-align:center; font-family:'Orbitron'; color:#ccc; letter-spacing:3px;">ANALYZING PLAYERS...</div>
         """
         slot_container.markdown(html_code, unsafe_allow_html=True)
         time.sleep(0.08) # Hız ayarı
@@ -192,7 +198,9 @@ def display_match_history(df, team_name, lang_dict):
 st.markdown(f'<div class="neon-header">{T["header_title"]}</div>', unsafe_allow_html=True)
 st.markdown(f"<div style='text-align:center; color:#666; font-size: 0.9rem; margin-bottom:50px; letter-spacing:2px; text-transform:uppercase;'>{T['header_sub']}</div>", unsafe_allow_html=True)
 
-df, team_logos, team_players = load_all_data()
+# YENİ: Oyuncu resimlerini de yüklüyoruz
+df, team_logos, team_players, player_images = load_all_data()
+
 if df.empty: st.error(T["loading_error"]); st.stop()
 teams = sorted(list(team_logos.keys()))
 if 'h_index' not in st.session_state: st.session_state.h_index = 0
@@ -230,8 +238,8 @@ with b2:
 if start:
     if h_team == a_team: st.warning(T["warning_same_team"])
     else:
-        # --- FREESPIN EFEKTİ BURADA ÇAĞRILIYOR ---
-        run_slot_effect()
+        # --- FREESPIN EFEKTİ (FOTOĞRAFLI) ---
+        run_slot_effect(player_images)
         
         with st.spinner(T["spinner"]):
             h_stats = get_advanced_stats(df, team_players, h_team)
