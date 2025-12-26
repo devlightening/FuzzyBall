@@ -41,7 +41,7 @@ TRANS = {
         "g_goals": "GİRDİ 3: Gol Gücü",
         "g_result": "SONUÇ: {0} Şansı",
         "g_chaos": "ORTAK: Kaos Tahmini",
-        "res_win": "G", "res_draw": "B", "res_loss": "M", # Maç geçmişi harfleri
+        "res_win": "G", "res_draw": "B", "res_loss": "M",
         "comp_home": "EV SAHİBİ GİRDİLERİ",
         "comp_away": "DEPLASMAN GİRDİLERİ",
         "final_res": "🏆 SONUÇ VE ATMOSFER",
@@ -91,99 +91,31 @@ TRANS = {
 
 # --- DİL SEÇİMİ (SIDEBAR) ---
 st.sidebar.markdown("## 🌍 Language / Dil")
-selected_lang = st.sidebar.radio("", ["TR", "EN"], index=0) # Varsayılan TR
-T = TRANS[selected_lang] # Seçilen dilin sözlüğünü T değişkenine ata
+selected_lang = st.sidebar.radio("", ["TR", "EN"], index=0) 
+T = TRANS[selected_lang]
 
 # --- CSS TASARIMI ---
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&display=swap');
     @import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@300;500;700&display=swap');
-
-    .stApp { 
-        background-color: #020202; 
-        color: #e0e0e0; 
-        font-family: 'Rajdhani', sans-serif; 
-        background-image: radial-gradient(circle at 50% 30%, #111 0%, #000 90%);
-    }
-    
-    .neon-header {
-        font-family: 'Orbitron', sans-serif;
-        text-align: center; font-size: 3.5rem; font-weight: 900;
-        background: -webkit-linear-gradient(#00f260, #0575e6);
-        -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-        text-shadow: 0 0 50px rgba(0, 242, 96, 0.3);
-        margin-bottom: 40px; letter-spacing: 4px;
-    }
-
+    .stApp { background-color: #020202; color: #e0e0e0; font-family: 'Rajdhani', sans-serif; background-image: radial-gradient(circle at 50% 30%, #111 0%, #000 90%); }
+    .neon-header { font-family: 'Orbitron', sans-serif; text-align: center; font-size: 3.5rem; font-weight: 900; background: -webkit-linear-gradient(#00f260, #0575e6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; text-shadow: 0 0 50px rgba(0, 242, 96, 0.3); margin-bottom: 40px; letter-spacing: 4px; }
     .logo-container { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 300px; }
-    
-    .logo-center {
-        width: 200px; height: 200px; object-fit: contain;
-        filter: drop-shadow(0 0 30px rgba(0, 242, 96, 0.5));
-        transform: scale(1.1); z-index: 10;
-        animation: float 3s ease-in-out infinite;
-        transition: all 0.5s ease;
-    }
-    
-    @keyframes float {
-        0% { transform: translateY(0px) scale(1.1); }
-        50% { transform: translateY(-10px) scale(1.1); }
-        100% { transform: translateY(0px) scale(1.1); }
-    }
-    
-    .team-name-box {
-        font-family: 'Orbitron', sans-serif; font-size: 1.5rem; font-weight: 700;
-        margin-top: 15px; color: #fff; text-shadow: 0 0 10px rgba(255,255,255,0.5);
-        background: rgba(255,255,255,0.05); padding: 8px 20px;
-        border-radius: 12px; border: 1px solid rgba(255,255,255,0.1);
-    }
-
+    .logo-center { width: 200px; height: 200px; object-fit: contain; filter: drop-shadow(0 0 30px rgba(0, 242, 96, 0.5)); transform: scale(1.1); z-index: 10; animation: float 3s ease-in-out infinite; transition: all 0.5s ease; }
+    @keyframes float { 0% { transform: translateY(0px) scale(1.1); } 50% { transform: translateY(-10px) scale(1.1); } 100% { transform: translateY(0px) scale(1.1); } }
+    .team-name-box { font-family: 'Orbitron', sans-serif; font-size: 1.5rem; font-weight: 700; margin-top: 15px; color: #fff; text-shadow: 0 0 10px rgba(255,255,255,0.5); background: rgba(255,255,255,0.05); padding: 8px 20px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); }
     .big-btn-container { display: flex; justify-content: center; align-items: center; width: 100%; margin-top: 30px; }
-    .big-btn-container button {
-        width: 100% !important; min-width: 300px !important;
-        background: linear-gradient(90deg, #00f260 0%, #0575e6 100%) !important;
-        color: white !important; font-family: 'Orbitron', sans-serif !important;
-        font-size: 1.5rem !important; font-weight: 800 !important;
-        padding: 18px 0 !important; border-radius: 12px !important;
-        border: 2px solid rgba(255,255,255,0.2) !important;
-        box-shadow: 0 0 40px rgba(0, 242, 96, 0.3) !important;
-        transition: all 0.3s ease !important; white-space: nowrap !important;
-    }
-    .big-btn-container button:hover {
-        transform: scale(1.02) !important; box-shadow: 0 0 60px rgba(5, 117, 230, 0.6) !important;
-    }
-    
-    .nav-btn-container button {
-        border-radius: 50% !important; width: 50px !important; height: 50px !important;
-        background: rgba(0,0,0,0.5) !important; border: 1px solid #444 !important;
-        color: #888 !important; font-size: 1.5rem !important; padding: 0 !important;
-        margin: 0 auto !important; display: flex !important; align-items: center !important; justify-content: center !important;
-    }
-    .nav-btn-container button:hover {
-        color: #00f260 !important; border-color: #00f260 !important;
-        box-shadow: 0 0 15px rgba(0, 242, 96, 0.4) !important;
-    }
-
-    .winner-card {
-        background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1);
-        border-radius: 20px; padding: 40px; text-align: center; margin-top: 30px;
-        backdrop-filter: blur(10px);
-    }
+    .big-btn-container button { width: 100% !important; min-width: 300px !important; background: linear-gradient(90deg, #00f260 0%, #0575e6 100%) !important; color: white !important; font-family: 'Orbitron', sans-serif !important; font-size: 1.5rem !important; font-weight: 800 !important; padding: 18px 0 !important; border-radius: 12px !important; border: 2px solid rgba(255,255,255,0.2) !important; box-shadow: 0 0 40px rgba(0, 242, 96, 0.3) !important; transition: all 0.3s ease !important; white-space: nowrap !important; }
+    .big-btn-container button:hover { transform: scale(1.02) !important; box-shadow: 0 0 60px rgba(5, 117, 230, 0.6) !important; }
+    .nav-btn-container button { border-radius: 50% !important; width: 50px !important; height: 50px !important; background: rgba(0,0,0,0.5) !important; border: 1px solid #444 !important; color: #888 !important; font-size: 1.5rem !important; padding: 0 !important; margin: 0 auto !important; display: flex !important; align-items: center !important; justify-content: center !important; }
+    .nav-btn-container button:hover { color: #00f260 !important; border-color: #00f260 !important; box-shadow: 0 0 15px rgba(0, 242, 96, 0.4) !important; }
+    .winner-card { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); border-radius: 20px; padding: 40px; text-align: center; margin-top: 30px; backdrop-filter: blur(10px); }
     .result-text { font-family: 'Orbitron'; font-size: 3.5rem; font-weight: 900; margin-top: 15px; letter-spacing: 2px; }
-    
-    .stat-card {
-        background: linear-gradient(180deg, rgba(30,30,40,0.95), rgba(10,10,10,0.95));
-        border-top: 3px solid #0575e6; padding: 20px; text-align: center; border-radius: 12px;
-        box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-    }
+    .stat-card { background: linear-gradient(180deg, rgba(30,30,40,0.95), rgba(10,10,10,0.95)); border-top: 3px solid #0575e6; padding: 20px; text-align: center; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
     .stat-value { font-size: 1.8rem; font-weight: bold; color: white; }
     .stat-label { font-size: 0.8rem; color: #888; text-transform: uppercase; letter-spacing: 1px; }
-    
-    .history-row { 
-        padding: 12px; border-bottom: 1px solid #222; display: flex; justify-content: space-between; align-items: center; 
-        font-size: 1rem; transition: background 0.2s;
-    }
+    .history-row { padding: 12px; border-bottom: 1px solid #222; display: flex; justify-content: space-between; align-items: center; font-size: 1rem; transition: background 0.2s; }
     .history-row:hover { background: rgba(255,255,255,0.05); }
     .win-tag { border-left: 4px solid #00f260; color: #00f260; }
     .loss-tag { border-left: 4px solid #ff0055; color: #ff0055; }
@@ -191,8 +123,8 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# --- GRAFİK FONKSİYONU ---
-def plot_fuzzy_chart(var, sim, title, color_hex):
+# --- GRAFİK FONKSİYONU (REVİZE EDİLDİ: "val" parametresi ile işaretleme) ---
+def plot_fuzzy_chart(var, sim, title, color_hex, val=None):
     plt.style.use('dark_background')
     fig, ax = plt.subplots(figsize=(7, 2.5))
     fig.patch.set_facecolor('#00000000')
@@ -202,11 +134,18 @@ def plot_fuzzy_chart(var, sim, title, color_hex):
         ax.plot(var.universe, var.terms[label].mf, label=label, linewidth=1.5, alpha=0.7)
         ax.fill_between(var.universe, 0, var.terms[label].mf, alpha=0.1)
     
-    try:
-        val = sim.output[var.label]
-        ax.vlines(val, 0, 1, color=color_hex, linewidth=2.5, linestyle='--')
-        ax.scatter([val], [0.5], s=100, color=color_hex, zorder=10)
-    except: pass
+    # Eğer giriş değeri (val) gönderildiyse onu çiz
+    if val is not None:
+        plot_val = val
+        ax.vlines(plot_val, 0, 1, color=color_hex, linewidth=2.5, linestyle='--')
+        ax.scatter([plot_val], [0.5], s=100, color=color_hex, zorder=10)
+    # Değer yoksa, simülasyon sonucunu (output) çizmeye çalış
+    else:
+        try:
+            plot_val = sim.output[var.label]
+            ax.vlines(plot_val, 0, 1, color=color_hex, linewidth=2.5, linestyle='--')
+            ax.scatter([plot_val], [0.5], s=100, color=color_hex, zorder=10)
+        except: pass
     
     ax.set_title(title, color='white', fontsize=10)
     ax.tick_params(labelsize=8, colors='#888')
@@ -223,17 +162,10 @@ def display_match_history(df, team_name, lang_dict):
         opp = row["AwayTeam"] if is_home else row["HomeTeam"]
         mys = int(row["FTHG"] if is_home else row["FTAG"])
         ops = int(row["FTAG"] if is_home else row["FTHG"])
-        
         if mys > ops: tag_class = "win-tag"; res_text = lang_dict["res_win"]
         elif mys < ops: tag_class = "loss-tag"; res_text = lang_dict["res_loss"]
         else: tag_class = "draw-tag"; res_text = lang_dict["res_draw"]
-        
-        st.markdown(f"""
-        <div class="history-row {tag_class}">
-            <div style="font-weight:bold;">VS {opp}</div>
-            <div style="font-family:'Orbitron';">{mys} - {ops} ({res_text})</div>
-        </div>
-        """, unsafe_allow_html=True)
+        st.markdown(f"""<div class="history-row {tag_class}"><div style="font-weight:bold;">VS {opp}</div><div style="font-family:'Orbitron';">{mys} - {ops} ({res_text})</div></div>""", unsafe_allow_html=True)
 
 # --- ANA PROGRAM ---
 st.markdown(f'<div class="neon-header">{T["header_title"]}</div>', unsafe_allow_html=True)
@@ -258,7 +190,6 @@ def change_team(side, direction):
 # --- SEÇİM ALANI ---
 mc1, mc2, mc3 = st.columns([1, 0.15, 1])
 
-# EV SAHİBİ
 with mc1:
     st.markdown(f"<h3 style='text-align:center; color:#00f260; font-family:Orbitron; letter-spacing:2px;'>🏠 {T['home']}</h3>", unsafe_allow_html=True)
     idx = st.session_state.h_index
@@ -267,10 +198,8 @@ with mc1:
     with la: st.markdown(f"""<div class="logo-container"><img src="{team_logos[teams[idx]]}" class="logo-center"><div class="team-name-box">{teams[idx]}</div></div>""", unsafe_allow_html=True)
     with nr: st.write(""); st.write(""); st.markdown('<div class="nav-btn-container">', unsafe_allow_html=True); st.button("❯", key="h_next", on_click=change_team, args=('home', 'next')); st.markdown('</div>', unsafe_allow_html=True)
 
-# VS ÇİZGİSİ
 with mc2: st.markdown("""<div style="height:350px; display:flex; align-items:center; justify-content:center;"><div style="width:1px; height:200px; background: linear-gradient(to bottom, transparent, #444, transparent);"></div></div>""", unsafe_allow_html=True)
 
-# DEPLASMAN
 with mc3:
     st.markdown(f"<h3 style='text-align:center; color:#0575e6; font-family:Orbitron; letter-spacing:2px;'>✈️ {T['away']}</h3>", unsafe_allow_html=True)
     idx_a = st.session_state.a_index
@@ -323,7 +252,6 @@ if start:
             
             card_sim.input['aggression'] = match_aggression
             card_sim.input['tension'] = match_tension
-            
             try:
                 card_sim.compute()
                 res_chaos = card_sim.output['chaos']
@@ -383,30 +311,31 @@ if start:
             
             st.info(T["graph_info"])
 
-            # --- 1. EV SAHİBİ GRAFİKLERİ ---
+            # EV SAHİBİ HESAPLAMA (Yeniden)
             match_sim.input['form'] = h_stats['fuzzy']['form']
             match_sim.input['rank'] = h_stats['fuzzy']['rank']
             match_sim.input['goals'] = h_stats['fuzzy']['goals']
             match_sim.compute()
             
-            fig_h_form = plot_fuzzy_chart(form, match_sim, f"{T['g_form']} ({h_stats['fuzzy']['form']})", "#00f260")
-            fig_h_rank = plot_fuzzy_chart(rank, match_sim, f"{T['g_rank']} ({h_stats['fuzzy']['rank']})", "#00f260")
-            fig_h_goals = plot_fuzzy_chart(goals, match_sim, f"{T['g_goals']} ({h_stats['fuzzy']['goals']})", "#00f260")
+            # --- GİRİŞ GRAFİKLERİNE DEĞER (val) GÖNDERİLİYOR ---
+            fig_h_form = plot_fuzzy_chart(form, match_sim, f"{T['g_form']} ({h_stats['fuzzy']['form']})", "#00f260", val=h_stats['fuzzy']['form'])
+            fig_h_rank = plot_fuzzy_chart(rank, match_sim, f"{T['g_rank']} ({h_stats['fuzzy']['rank']})", "#00f260", val=h_stats['fuzzy']['rank'])
+            fig_h_goals = plot_fuzzy_chart(goals, match_sim, f"{T['g_goals']} ({h_stats['fuzzy']['goals']})", "#00f260", val=h_stats['fuzzy']['goals'])
             fig_h_res = plot_fuzzy_chart(result, match_sim, T["g_result"].format(h_team), "#ffffff")
 
-            # --- 2. DEPLASMAN GRAFİKLERİ ---
+            # DEPLASMAN HESAPLAMA (Yeniden)
             match_sim.input['form'] = a_stats['fuzzy']['form']
             match_sim.input['rank'] = a_stats['fuzzy']['rank']
             match_sim.input['goals'] = a_stats['fuzzy']['goals']
             match_sim.compute()
             
-            fig_a_form = plot_fuzzy_chart(form, match_sim, f"{T['g_form']} ({a_stats['fuzzy']['form']})", "#00c6ff")
-            fig_a_rank = plot_fuzzy_chart(rank, match_sim, f"{T['g_rank']} ({a_stats['fuzzy']['rank']})", "#00c6ff")
-            fig_a_goals = plot_fuzzy_chart(goals, match_sim, f"{T['g_goals']} ({a_stats['fuzzy']['goals']})", "#00c6ff")
+            # --- GİRİŞ GRAFİKLERİNE DEĞER (val) GÖNDERİLİYOR ---
+            fig_a_form = plot_fuzzy_chart(form, match_sim, f"{T['g_form']} ({a_stats['fuzzy']['form']})", "#00c6ff", val=a_stats['fuzzy']['form'])
+            fig_a_rank = plot_fuzzy_chart(rank, match_sim, f"{T['g_rank']} ({a_stats['fuzzy']['rank']})", "#00c6ff", val=a_stats['fuzzy']['rank'])
+            fig_a_goals = plot_fuzzy_chart(goals, match_sim, f"{T['g_goals']} ({a_stats['fuzzy']['goals']})", "#00c6ff", val=a_stats['fuzzy']['goals'])
             fig_a_res = plot_fuzzy_chart(result, match_sim, T["g_result"].format(a_team), "#ffffff")
 
-            # --- 3. YAN YANA GÖSTERİM ---
-            
+            # --- YAN YANA GÖSTERİM ---
             c1, c2 = st.columns(2)
             c1.markdown(f"<h4 style='text-align:center; color:#00f260'>{T['comp_home']}</h4>", unsafe_allow_html=True)
             c2.markdown(f"<h4 style='text-align:center; color:#00c6ff'>{T['comp_away']}</h4>", unsafe_allow_html=True)
