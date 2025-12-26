@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import time
 import pandas as pd
+import random  # <--- YENİ EKLENDİ (Rastgele ikonlar için)
 from data_utils import load_all_data, get_advanced_stats
 from fuzzy_system import match_sim, card_sim, form, rank, goals, result, aggression, tension, chaos
 
@@ -123,7 +124,7 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# --- GRAFİK FONKSİYONU (REVİZE EDİLDİ: "val" parametresi ile işaretleme) ---
+# --- GRAFİK FONKSİYONU ---
 def plot_fuzzy_chart(var, sim, title, color_hex, val=None):
     plt.style.use('dark_background')
     fig, ax = plt.subplots(figsize=(7, 2.5))
@@ -134,12 +135,10 @@ def plot_fuzzy_chart(var, sim, title, color_hex, val=None):
         ax.plot(var.universe, var.terms[label].mf, label=label, linewidth=1.5, alpha=0.7)
         ax.fill_between(var.universe, 0, var.terms[label].mf, alpha=0.1)
     
-    # Eğer giriş değeri (val) gönderildiyse onu çiz
     if val is not None:
         plot_val = val
         ax.vlines(plot_val, 0, 1, color=color_hex, linewidth=2.5, linestyle='--')
         ax.scatter([plot_val], [0.5], s=100, color=color_hex, zorder=10)
-    # Değer yoksa, simülasyon sonucunu (output) çizmeye çalış
     else:
         try:
             plot_val = sim.output[var.label]
@@ -152,6 +151,28 @@ def plot_fuzzy_chart(var, sim, title, color_hex, val=None):
     ax.spines['top'].set_visible(False); ax.spines['right'].set_visible(False)
     ax.grid(False)
     return fig
+
+# --- SLOT MAKİNESİ (FREESPIN) EFEKTİ ---
+def run_slot_effect():
+    slot_container = st.empty()
+    # Slot ikonları (Futbol ve Şans karışık)
+    icons = ["⚽", "🥅", "🏆", "🔥", "❌", "💰", "🎲", "7️⃣", "🍒", "💎", "⚡"]
+    
+    # 20 kez hızlıca döndür
+    for i in range(20):
+        c1, c2, c3 = random.sample(icons, 3)
+        html_code = f"""
+        <div style="display:flex; justify-content:center; gap:20px; margin: 30px 0;">
+            <div style="font-size:60px; background:rgba(255,255,255,0.1); padding:10px; border-radius:10px; border:2px solid #00f260; width:100px; text-align:center;">{c1}</div>
+            <div style="font-size:60px; background:rgba(255,255,255,0.1); padding:10px; border-radius:10px; border:2px solid #0575e6; width:100px; text-align:center;">{c2}</div>
+            <div style="font-size:60px; background:rgba(255,255,255,0.1); padding:10px; border-radius:10px; border:2px solid #fce803; width:100px; text-align:center;">{c3}</div>
+        </div>
+        <div style="text-align:center; font-family:'Orbitron'; color:#ccc; letter-spacing:3px;">ANALYZING...</div>
+        """
+        slot_container.markdown(html_code, unsafe_allow_html=True)
+        time.sleep(0.08) # Hız ayarı
+    
+    slot_container.empty() # Efekti temizle
 
 # --- MAÇ GEÇMİŞİ FONKSİYONU ---
 def display_match_history(df, team_name, lang_dict):
@@ -172,24 +193,16 @@ st.markdown(f'<div class="neon-header">{T["header_title"]}</div>', unsafe_allow_
 st.markdown(f"<div style='text-align:center; color:#666; font-size: 0.9rem; margin-bottom:50px; letter-spacing:2px; text-transform:uppercase;'>{T['header_sub']}</div>", unsafe_allow_html=True)
 
 df, team_logos, team_players = load_all_data()
-
-if df.empty:
-    st.error(T["loading_error"])
-    st.stop()
-
+if df.empty: st.error(T["loading_error"]); st.stop()
 teams = sorted(list(team_logos.keys()))
-
 if 'h_index' not in st.session_state: st.session_state.h_index = 0
 if 'a_index' not in st.session_state: st.session_state.a_index = 1
-
 def change_team(side, direction):
     key = 'h_index' if side == 'home' else 'a_index'
     if direction == 'next': st.session_state[key] = (st.session_state[key] + 1) % len(teams)
     else: st.session_state[key] = (st.session_state[key] - 1) % len(teams)
 
-# --- SEÇİM ALANI ---
 mc1, mc2, mc3 = st.columns([1, 0.15, 1])
-
 with mc1:
     st.markdown(f"<h3 style='text-align:center; color:#00f260; font-family:Orbitron; letter-spacing:2px;'>🏠 {T['home']}</h3>", unsafe_allow_html=True)
     idx = st.session_state.h_index
@@ -197,9 +210,7 @@ with mc1:
     with nl: st.write(""); st.write(""); st.markdown('<div class="nav-btn-container">', unsafe_allow_html=True); st.button("❮", key="h_prev", on_click=change_team, args=('home', 'prev')); st.markdown('</div>', unsafe_allow_html=True)
     with la: st.markdown(f"""<div class="logo-container"><img src="{team_logos[teams[idx]]}" class="logo-center"><div class="team-name-box">{teams[idx]}</div></div>""", unsafe_allow_html=True)
     with nr: st.write(""); st.write(""); st.markdown('<div class="nav-btn-container">', unsafe_allow_html=True); st.button("❯", key="h_next", on_click=change_team, args=('home', 'next')); st.markdown('</div>', unsafe_allow_html=True)
-
 with mc2: st.markdown("""<div style="height:350px; display:flex; align-items:center; justify-content:center;"><div style="width:1px; height:200px; background: linear-gradient(to bottom, transparent, #444, transparent);"></div></div>""", unsafe_allow_html=True)
-
 with mc3:
     st.markdown(f"<h3 style='text-align:center; color:#0575e6; font-family:Orbitron; letter-spacing:2px;'>✈️ {T['away']}</h3>", unsafe_allow_html=True)
     idx_a = st.session_state.a_index
@@ -207,10 +218,8 @@ with mc3:
     with dl: st.write(""); st.write(""); st.markdown('<div class="nav-btn-container">', unsafe_allow_html=True); st.button("❮", key="a_prev", on_click=change_team, args=('away', 'prev')); st.markdown('</div>', unsafe_allow_html=True)
     with da: st.markdown(f"""<div class="logo-container"><img src="{team_logos[teams[idx_a]]}" class="logo-center" style="filter: drop-shadow(0 0 30px rgba(5, 117, 230, 0.6));"><div class="team-name-box">{teams[idx_a]}</div></div>""", unsafe_allow_html=True)
     with dr: st.write(""); st.write(""); st.markdown('<div class="nav-btn-container">', unsafe_allow_html=True); st.button("❯", key="a_next", on_click=change_team, args=('away', 'next')); st.markdown('</div>', unsafe_allow_html=True)
-
 h_team = teams[st.session_state.h_index]
 a_team = teams[st.session_state.a_index]
-
 st.markdown("<br>", unsafe_allow_html=True)
 b1, b2, b3 = st.columns([1, 3, 1])
 with b2:
@@ -218,75 +227,56 @@ with b2:
     start = st.button(T["start_btn"], key="start_btn", use_container_width=True)
     st.markdown('</div>', unsafe_allow_html=True)
 
-# --- ANALİZ ---
 if start:
-    if h_team == a_team:
-        st.warning(T["warning_same_team"])
+    if h_team == a_team: st.warning(T["warning_same_team"])
     else:
+        # --- FREESPIN EFEKTİ BURADA ÇAĞRILIYOR ---
+        run_slot_effect()
+        
         with st.spinner(T["spinner"]):
-            time.sleep(1)
             h_stats = get_advanced_stats(df, team_players, h_team)
             a_stats = get_advanced_stats(df, team_players, a_team)
             
-            # --- MAMDANI SİMÜLASYONU (EV SAHİBİ) ---
             match_sim.input['form'] = h_stats['fuzzy']['form']
             match_sim.input['rank'] = h_stats['fuzzy']['rank']
             match_sim.input['goals'] = h_stats['fuzzy']['goals']
             match_sim.compute()
             res_h = match_sim.output['result']
             
-            # --- MAMDANI SİMÜLASYONU (DEPLASMAN) ---
             match_sim.input['form'] = a_stats['fuzzy']['form']
             match_sim.input['rank'] = a_stats['fuzzy']['rank']
             match_sim.input['goals'] = a_stats['fuzzy']['goals']
             match_sim.compute()
             res_a = match_sim.output['result']
             
-            final_h = res_h + 1.0 # Saha avantajı
-            final_a = res_a
+            final_h = res_h + 1.0; final_a = res_a
             
-            # --- KART SİSTEMİ (GÜVENLİK KİLİTLİ) ---
             match_aggression = (h_stats['fuzzy']['cards'] + a_stats['fuzzy']['cards']) / 2
             rank_diff = abs(h_stats['raw']['rank'] - a_stats['raw']['rank'])
             match_tension = max(0, min(10 - (rank_diff / 2), 10))
-            
             card_sim.input['aggression'] = match_aggression
             card_sim.input['tension'] = match_tension
-            try:
-                card_sim.compute()
-                res_chaos = card_sim.output['chaos']
-            except:
-                res_chaos = 5.0
+            try: card_sim.compute(); res_chaos = card_sim.output['chaos']
+            except: res_chaos = 5.0
 
         st.markdown("---")
         t1, t2, t3 = st.tabs([T["tab1"], T["tab2"], T["tab3"]])
-        
         with t1:
             diff = final_h - final_a
             if diff > 1.5: pred_text = T["wins"]; clr = "#00f260"; glow_clr = "rgba(0, 242, 96, 0.6)"; winner_logo = team_logos.get(h_team, "")
             elif diff < -1.5: pred_text = T["wins"]; clr = "#00c6ff"; glow_clr = "rgba(0, 198, 255, 0.6)"; winner_logo = team_logos.get(a_team, "")
             else: pred_text = T["draw"]; clr = "#fce803"; glow_clr = "rgba(252, 232, 3, 0.6)"; winner_logo = "https://resources.premierleague.com/premierleague/pl_icon.png"
-
-            html_content = f"""
-            <div class="winner-card" style="border-color: {clr}; box-shadow: 0 0 50px {glow_clr};">
-                <h3 style="color:#aaa; letter-spacing:4px; margin:0; font-size: 1rem;">{T['winner_title']}</h3>
-                <img src="{winner_logo}" style="width: 250px; height: 250px; object-fit: contain; margin: 30px auto; display:block; filter: drop-shadow(0 0 30px {glow_clr}); animation: float 4s infinite;">
-                <div class="result-text" style="color:{clr}; text-shadow: 0 0 20px {glow_clr};">{pred_text}</div>
-                <div style="margin-top:20px; color:#ccc; font-family:'Rajdhani'; font-size: 1.2rem;">{T['confidence']}: <b>{min(abs(diff), 9.9):.2f} / 10</b></div>
-            </div>
-            """
+            html_content = f"""<div class="winner-card" style="border-color: {clr}; box-shadow: 0 0 50px {glow_clr};"><h3 style="color:#aaa; letter-spacing:4px; margin:0; font-size: 1rem;">{T['winner_title']}</h3><img src="{winner_logo}" style="width: 250px; height: 250px; object-fit: contain; margin: 30px auto; display:block; filter: drop-shadow(0 0 30px {glow_clr}); animation: float 4s infinite;"><div class="result-text" style="color:{clr}; text-shadow: 0 0 20px {glow_clr};">{pred_text}</div><div style="margin-top:20px; color:#ccc; font-family:'Rajdhani'; font-size: 1.2rem;">{T['confidence']}: <b>{min(abs(diff), 9.9):.2f} / 10</b></div></div>"""
             st.markdown(html_content, unsafe_allow_html=True)
             st.markdown("<br>", unsafe_allow_html=True)
             if res_chaos > 6.5: st.error(T["chaos_high"].format(res_chaos))
             else: st.success(T["chaos_low"].format(res_chaos))
-
         with t2:
             c1, c2, c3, c4 = st.columns(4)
             c1.markdown(f"<div class='stat-card'><div class='stat-label'>{T['stat_rank']}</div><div class='stat-value'>{h_stats['raw']['rank']} - {a_stats['raw']['rank']}</div></div>", unsafe_allow_html=True)
             c2.markdown(f"<div class='stat-card'><div class='stat-label'>{T['stat_goals']}</div><div class='stat-value'>{h_stats['raw']['scored']}/{h_stats['raw']['conceded']} - {a_stats['raw']['scored']}/{a_stats['raw']['conceded']}</div></div>", unsafe_allow_html=True)
             c3.markdown(f"<div class='stat-card'><div class='stat-label'>{T['stat_form']}</div><div class='stat-value'>{h_stats['raw']['form_points']} - {a_stats['raw']['form_points']}</div></div>", unsafe_allow_html=True)
             c4.markdown(f"<div class='stat-card'><div class='stat-label'>{T['stat_missing']}</div><div class='stat-value' style='color:#ff4444'>{h_stats['raw']['missing']} - {a_stats['raw']['missing']}</div></div>", unsafe_allow_html=True)
-            
             st.markdown("---")
             hc, ac = st.columns(2)
             with hc:
@@ -299,68 +289,30 @@ if start:
                 if a_stats['raw']['missing_names']: st.warning(T["missing_alert"].format(', '.join(a_stats['raw']['missing_names'])))
                 else: st.success(T["full_squad"])
                 display_match_history(df, a_team, T)
-
         with t3:
-            st.markdown(f"""
-            <div style="text-align:center; margin-bottom:20px;">
-                <span style="color:#00f260; font-size:1.5rem; font-weight:bold; margin-right:20px;">🏠 {h_team}</span>
-                <span style="color:#666; font-size:1.2rem;">VS</span>
-                <span style="color:#00c6ff; font-size:1.5rem; font-weight:bold; margin-left:20px;">✈️ {a_team}</span>
-            </div>
-            """, unsafe_allow_html=True)
-            
+            st.markdown(f"""<div style="text-align:center; margin-bottom:20px;"><span style="color:#00f260; font-size:1.5rem; font-weight:bold; margin-right:20px;">🏠 {h_team}</span><span style="color:#666; font-size:1.2rem;">VS</span><span style="color:#00c6ff; font-size:1.5rem; font-weight:bold; margin-left:20px;">✈️ {a_team}</span></div>""", unsafe_allow_html=True)
             st.info(T["graph_info"])
-
-            # EV SAHİBİ HESAPLAMA (Yeniden)
-            match_sim.input['form'] = h_stats['fuzzy']['form']
-            match_sim.input['rank'] = h_stats['fuzzy']['rank']
-            match_sim.input['goals'] = h_stats['fuzzy']['goals']
-            match_sim.compute()
-            
-            # --- GİRİŞ GRAFİKLERİNE DEĞER (val) GÖNDERİLİYOR ---
+            match_sim.input['form'] = h_stats['fuzzy']['form']; match_sim.input['rank'] = h_stats['fuzzy']['rank']; match_sim.input['goals'] = h_stats['fuzzy']['goals']; match_sim.compute()
             fig_h_form = plot_fuzzy_chart(form, match_sim, f"{T['g_form']} ({h_stats['fuzzy']['form']})", "#00f260", val=h_stats['fuzzy']['form'])
             fig_h_rank = plot_fuzzy_chart(rank, match_sim, f"{T['g_rank']} ({h_stats['fuzzy']['rank']})", "#00f260", val=h_stats['fuzzy']['rank'])
             fig_h_goals = plot_fuzzy_chart(goals, match_sim, f"{T['g_goals']} ({h_stats['fuzzy']['goals']})", "#00f260", val=h_stats['fuzzy']['goals'])
             fig_h_res = plot_fuzzy_chart(result, match_sim, T["g_result"].format(h_team), "#ffffff")
 
-            # DEPLASMAN HESAPLAMA (Yeniden)
-            match_sim.input['form'] = a_stats['fuzzy']['form']
-            match_sim.input['rank'] = a_stats['fuzzy']['rank']
-            match_sim.input['goals'] = a_stats['fuzzy']['goals']
-            match_sim.compute()
-            
-            # --- GİRİŞ GRAFİKLERİNE DEĞER (val) GÖNDERİLİYOR ---
+            match_sim.input['form'] = a_stats['fuzzy']['form']; match_sim.input['rank'] = a_stats['fuzzy']['rank']; match_sim.input['goals'] = a_stats['fuzzy']['goals']; match_sim.compute()
             fig_a_form = plot_fuzzy_chart(form, match_sim, f"{T['g_form']} ({a_stats['fuzzy']['form']})", "#00c6ff", val=a_stats['fuzzy']['form'])
             fig_a_rank = plot_fuzzy_chart(rank, match_sim, f"{T['g_rank']} ({a_stats['fuzzy']['rank']})", "#00c6ff", val=a_stats['fuzzy']['rank'])
             fig_a_goals = plot_fuzzy_chart(goals, match_sim, f"{T['g_goals']} ({a_stats['fuzzy']['goals']})", "#00c6ff", val=a_stats['fuzzy']['goals'])
             fig_a_res = plot_fuzzy_chart(result, match_sim, T["g_result"].format(a_team), "#ffffff")
 
-            # --- YAN YANA GÖSTERİM ---
             c1, c2 = st.columns(2)
             c1.markdown(f"<h4 style='text-align:center; color:#00f260'>{T['comp_home']}</h4>", unsafe_allow_html=True)
             c2.markdown(f"<h4 style='text-align:center; color:#00c6ff'>{T['comp_away']}</h4>", unsafe_allow_html=True)
-
-            col1, col2 = st.columns(2)
-            with col1: st.pyplot(fig_h_form)
-            with col2: st.pyplot(fig_a_form)
-            
-            col3, col4 = st.columns(2)
-            with col3: st.pyplot(fig_h_rank)
-            with col4: st.pyplot(fig_a_rank)
-            
-            col5, col6 = st.columns(2)
-            with col5: st.pyplot(fig_h_goals)
-            with col6: st.pyplot(fig_a_goals)
-
+            col1, col2 = st.columns(2); col1.pyplot(fig_h_form); col2.pyplot(fig_a_form)
+            col3, col4 = st.columns(2); col3.pyplot(fig_h_rank); col4.pyplot(fig_a_rank)
+            col5, col6 = st.columns(2); col5.pyplot(fig_h_goals); col6.pyplot(fig_a_goals)
             st.markdown("---")
             st.markdown(f"<h4 style='text-align:center;'>{T['final_res']}</h4>", unsafe_allow_html=True)
             r1, r2, r3 = st.columns([1, 1, 1])
-            with r1: 
-                st.markdown(f"<div style='text-align:center'>{T['prob_win'].format(h_team)}</div>", unsafe_allow_html=True)
-                st.pyplot(fig_h_res)
-            with r2:
-                st.markdown(f"<div style='text-align:center'>{T['prob_chaos']}</div>", unsafe_allow_html=True)
-                st.pyplot(plot_fuzzy_chart(chaos, card_sim, f"Atmosfer: {res_chaos:.2f}", "#ff0055"))
-            with r3:
-                st.markdown(f"<div style='text-align:center'>{T['prob_win'].format(a_team)}</div>", unsafe_allow_html=True)
-                st.pyplot(fig_a_res)
+            r1.markdown(f"<div style='text-align:center'>{T['prob_win'].format(h_team)}</div>", unsafe_allow_html=True); r1.pyplot(fig_h_res)
+            r2.markdown(f"<div style='text-align:center'>{T['prob_chaos']}</div>", unsafe_allow_html=True); r2.pyplot(plot_fuzzy_chart(chaos, card_sim, f"Atmosfer: {res_chaos:.2f}", "#ff0055"))
+            r3.markdown(f"<div style='text-align:center'>{T['prob_win'].format(a_team)}</div>", unsafe_allow_html=True); r3.pyplot(fig_a_res)
