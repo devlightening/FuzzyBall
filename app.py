@@ -9,7 +9,7 @@ from data_utils import load_all_data, get_advanced_stats
 from fuzzy_system import match_sim, card_sim, form, rank, goals, result, aggression, tension, chaos
 
 # --- SAYFA AYARLARI ---
-st.set_page_config(page_title="FUZZYBED PREDICTOR", page_icon="⚽", layout="wide")
+st.set_page_config(page_title="FuzzyBed Predictor", page_icon="⚽", layout="wide")
 
 # --- DİL SÖZLÜĞÜ (TRANSLATION DICTIONARY) ---
 TRANS = {
