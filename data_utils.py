@@ -1,5 +1,4 @@
 import os
-import sys
 import pandas as pd
 import requests
 import streamlit as st
@@ -8,58 +7,66 @@ import random
 import time
 from datetime import datetime, timedelta
 
-# SSL ve Proxy Hatalarını Engelle
-if 'REQUESTS_CA_BUNDLE' in os.environ: del os.environ['REQUESTS_CA_BUNDLE']
-if 'CURL_CA_BUNDLE' in os.environ: del os.environ['CURL_CA_BUNDLE']
+# SSL Hatalarını Engelle
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 API_STATIC = "https://fantasy.premierleague.com/api/bootstrap-static/"
 API_FIXTURES = "https://fantasy.premierleague.com/api/fixtures/"
 
-# --- GÜÇLÜ İSTEK FONKSİYONU (RETRY MEKANİZMALI) ---
+# --- 1. GÜÇLÜ İSTEK FONKSİYONU ---
 def fetch_api_data(url, retries=3):
     headers = {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-        "Accept": "application/json, text/plain, */*",
-        "Accept-Language": "en-US,en;q=0.9",
-        "Referer": "https://fantasy.premierleague.com/",
-        "Origin": "https://fantasy.premierleague.com"
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
+        "Accept": "application/json",
+        "Origin": "https://fantasy.premierleague.com",
+        "Referer": "https://fantasy.premierleague.com/"
     }
     
     for i in range(retries):
         try:
-            response = requests.get(url, headers=headers, verify=False, timeout=30)
+            response = requests.get(url, headers=headers, verify=False, timeout=15)
             if response.status_code == 200:
                 return response.json()
-        except Exception as e:
+        except:
             time.sleep(1)
             continue
-            
     return None
 
-# --- YEDEK VERİ OLUŞTURUCU ---
+# --- 2. YEDEK VERİ OLUŞTURUCU (MOCK DATA) ---
 def generate_mock_data():
+    # Bu fonksiyon API çalışmazsa devreye girer ve sahte ama düzgün veri üretir.
     teams = [
         "Arsenal", "Aston Villa", "Bournemouth", "Brentford", "Brighton", 
         "Chelsea", "Crystal Palace", "Everton", "Fulham", "Ipswich", 
         "Leicester", "Liverpool", "Luton", "Man City", "Man Utd", 
         "Newcastle", "Nott'm Forest", "Southampton", "Tottenham", "West Ham", "Wolves"
     ]
-    id_to_name = {i+1: t for i, t in enumerate(teams)}
-    team_logos = {t: f"https://resources.premierleague.com/premierleague/badges/100/t{i+1}.png" for i, t in enumerate(teams)}
-    team_players = {t: [] for t in teams}
-    match_list = []
     
-    # Rastgele Maç Geçmişi Oluştur
+    id_to_name = {i+1: t for i, t in enumerate(teams)}
+    
+    # Gerçek logoları kullanmaya çalışalım
+    team_logos = {t: f"https://resources.premierleague.com/premierleague/badges/100/t{i+1}.png" for i, t in enumerate(teams)}
+    
+    team_players = {}
+    for t in teams:
+        team_players[t] = [
+            {'web_name': f'Star ({t})', 'status': 'a', 'chance': 100},
+            {'web_name': f'Defender ({t})', 'status': 'a', 'chance': 100}
+        ]
+    
+    match_list = []
     today = datetime.now()
-    for i in range(50):
-        date = today - timedelta(days=i*2)
+    
+    # Rastgele maç geçmişi
+    for i in range(100):
+        date = today - timedelta(days=i*3)
         home = random.choice(teams)
         away = random.choice(teams)
         while home == away: away = random.choice(teams)
         
-        h_score = random.randint(0, 3)
-        a_score = random.randint(0, 3)
+        h_score = random.randint(0, 4)
+        a_score = random.randint(0, 4)
+        
         ftr = 'H' if h_score > a_score else ('A' if a_score > h_score else 'D')
         
         match_list.append({
@@ -69,20 +76,23 @@ def generate_mock_data():
             'HY': random.randint(0, 2), 'AY': random.randint(0, 2),
             'HR': 0, 'AR': 0
         })
-
+        
     df = pd.DataFrame(match_list)
+    # Varsayılan bir oyuncu resmi
     all_player_images = ["https://resources.premierleague.com/premierleague/photos/players/110x140/p223340.png"] * 20
+    
     return df, team_logos, team_players, all_player_images
 
-@st.cache_data(ttl=1800)
+# --- 3. ANA VERİ YÜKLEME FONKSİYONU ---
+@st.cache_data(ttl=3600, show_spinner=False)
 def load_all_data():
+    # BURADA ASLA st.toast veya st.error KULLANMA!
+    # Sadece veri döndür. Hata olursa mock data döndür.
+    
     try:
-        # --- 1. STATİK VERİ ---
+        # 1. Statik Veriyi Çek
         data_static = fetch_api_data(API_STATIC)
-        
-        if not data_static or not isinstance(data_static, dict):
-            # API çalışmıyorsa sessizce yedek veriye geç (st.toast KULLANMA)
-            return generate_mock_data()
+        if not data_static: return generate_mock_data() # API yoksa direkt mock dön
 
         id_to_name = {}
         team_logos = {}
@@ -109,17 +119,17 @@ def load_all_data():
                 team_name = id_to_name.get(p['team'])
                 if team_name:
                     team_players[team_name].append({
-                        'web_name': p['web_name'], 'status': p['status'], 
+                        'web_name': p['web_name'],
+                        'status': p['status'], 
                         'chance': p.get('chance_of_playing_next_round', 100)
                     })
                     if p.get('minutes', 0) > 0:
                         all_player_images.append(f"https://resources.premierleague.com/premierleague/photos/players/110x140/p{p['code']}.png")
 
-        # --- 2. FİKSTÜR VERİSİ ---
+        # 2. Fikstür Verisini Çek
         data_fixtures = fetch_api_data(API_FIXTURES)
-        
         if not data_fixtures or not isinstance(data_fixtures, list):
-             return generate_mock_data()
+             return generate_mock_data() # Fikstür yoksa mock dön
 
         match_list = []
         for match in data_fixtures:
@@ -154,9 +164,8 @@ def load_all_data():
         df['Date'] = pd.to_datetime(df['Date']).dt.date
         return df, team_logos, team_players, all_player_images
 
-    except Exception as e:
-        # HATA DURUMUNDA SESSİZCE YEDEK VERİYE GEÇ
-        print(f"API Hatası: {e}") # Konsola yazdır (kullanıcı görmez, çökmez)
+    except Exception:
+        # Ne hata olursa olsun, sessizce mock dataya geç
         return generate_mock_data()
 
 def get_advanced_stats(df, team_players, team, last_n=5):
