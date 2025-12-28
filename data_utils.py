@@ -16,8 +16,11 @@ API_FIXTURES = "https://fantasy.premierleague.com/api/fixtures/"
 # --- 1. GÜÇLÜ İSTEK FONKSİYONU ---
 def fetch_api_data(url, retries=3):
     headers = {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)",
         "Accept": "application/json",
+        "Cache-Control": "no-cache, no-store, must-revalidate", # Önbelleği Zorla Temizle
+        "Pragma": "no-cache",
+        "Expires": "0",
         "Origin": "https://fantasy.premierleague.com",
         "Referer": "https://fantasy.premierleague.com/"
     }
@@ -34,30 +37,18 @@ def fetch_api_data(url, retries=3):
 
 # --- 2. YEDEK VERİ OLUŞTURUCU (MOCK DATA) ---
 def generate_mock_data():
-    # Bu fonksiyon API çalışmazsa devreye girer ve sahte ama düzgün veri üretir.
     teams = [
         "Arsenal", "Aston Villa", "Bournemouth", "Brentford", "Brighton", 
         "Chelsea", "Crystal Palace", "Everton", "Fulham", "Ipswich", 
         "Leicester", "Liverpool", "Luton", "Man City", "Man Utd", 
         "Newcastle", "Nott'm Forest", "Southampton", "Tottenham", "West Ham", "Wolves"
     ]
-    
     id_to_name = {i+1: t for i, t in enumerate(teams)}
-    
-    # Gerçek logoları kullanmaya çalışalım
     team_logos = {t: f"https://resources.premierleague.com/premierleague/badges/100/t{i+1}.png" for i, t in enumerate(teams)}
-    
-    team_players = {}
-    for t in teams:
-        team_players[t] = [
-            {'web_name': f'Star ({t})', 'status': 'a', 'chance': 100},
-            {'web_name': f'Defender ({t})', 'status': 'a', 'chance': 100}
-        ]
     
     match_list = []
     today = datetime.now()
     
-    # Rastgele maç geçmişi
     for i in range(100):
         date = today - timedelta(days=i*3)
         home = random.choice(teams)
@@ -66,7 +57,6 @@ def generate_mock_data():
         
         h_score = random.randint(0, 4)
         a_score = random.randint(0, 4)
-        
         ftr = 'H' if h_score > a_score else ('A' if a_score > h_score else 'D')
         
         match_list.append({
@@ -78,21 +68,18 @@ def generate_mock_data():
         })
         
     df = pd.DataFrame(match_list)
-    # Varsayılan bir oyuncu resmi
     all_player_images = ["https://resources.premierleague.com/premierleague/photos/players/110x140/p223340.png"] * 20
-    
+    team_players = {t: [] for t in teams}
     return df, team_logos, team_players, all_player_images
 
 # --- 3. ANA VERİ YÜKLEME FONKSİYONU ---
-@st.cache_data(ttl=3600, show_spinner=False)
+# DİKKAT: ttl=60 yaptık (Her 60 saniyede bir veriyi yeniler)
+@st.cache_data(ttl=60, show_spinner=False)
 def load_all_data():
-    # BURADA ASLA st.toast veya st.error KULLANMA!
-    # Sadece veri döndür. Hata olursa mock data döndür.
-    
     try:
-        # 1. Statik Veriyi Çek
+        # 1. Statik Veri
         data_static = fetch_api_data(API_STATIC)
-        if not data_static: return generate_mock_data() # API yoksa direkt mock dön
+        if not data_static: return generate_mock_data()
 
         id_to_name = {}
         team_logos = {}
@@ -126,37 +113,42 @@ def load_all_data():
                     if p.get('minutes', 0) > 0:
                         all_player_images.append(f"https://resources.premierleague.com/premierleague/photos/players/110x140/p{p['code']}.png")
 
-        # 2. Fikstür Verisini Çek
+        # 2. Fikstür Verisi
         data_fixtures = fetch_api_data(API_FIXTURES)
         if not data_fixtures or not isinstance(data_fixtures, list):
-             return generate_mock_data() # Fikstür yoksa mock dön
+             return generate_mock_data()
 
         match_list = []
         for match in data_fixtures:
-            if isinstance(match, dict) and match.get('finished'):
-                h_name = id_to_name.get(match['team_h'], "Unknown")
-                a_name = id_to_name.get(match['team_a'], "Unknown")
-                h_score = match.get('team_h_score', 0)
-                a_score = match.get('team_a_score', 0)
+            if isinstance(match, dict):
+                # *** KRİTİK DÜZELTME BURADA ***
+                # Hem kesin bitmiş (finished) hem de henüz düdük çalmış ama onay bekleyen (finished_provisional) maçları al
+                is_finished = match.get('finished') or match.get('finished_provisional')
                 
-                hy, ay, hr, ar = 0, 0, 0, 0
-                stats = match.get('stats', [])
-                if isinstance(stats, list):
-                    for stat in stats:
-                        if stat.get('identifier') == 'yellow_cards':
-                            for x in stat.get('h', []): hy += x.get('value', 0)
-                            for x in stat.get('a', []): ay += x.get('value', 0)
-                        if stat.get('identifier') == 'red_cards':
-                            for x in stat.get('h', []): hr += x.get('value', 0)
-                            for x in stat.get('a', []): ar += x.get('value', 0)
+                if is_finished:
+                    h_name = id_to_name.get(match['team_h'], "Unknown")
+                    a_name = id_to_name.get(match['team_a'], "Unknown")
+                    h_score = match.get('team_h_score', 0)
+                    a_score = match.get('team_a_score', 0)
+                    
+                    hy, ay, hr, ar = 0, 0, 0, 0
+                    stats = match.get('stats', [])
+                    if isinstance(stats, list):
+                        for stat in stats:
+                            if stat.get('identifier') == 'yellow_cards':
+                                for x in stat.get('h', []): hy += x.get('value', 0)
+                                for x in stat.get('a', []): ay += x.get('value', 0)
+                            if stat.get('identifier') == 'red_cards':
+                                for x in stat.get('h', []): hr += x.get('value', 0)
+                                for x in stat.get('a', []): ar += x.get('value', 0)
 
-                match_list.append({
-                    'Date': match.get('kickoff_time'),
-                    'HomeTeam': h_name, 'AwayTeam': a_name,
-                    'FTHG': h_score, 'FTAG': a_score, 
-                    'FTR': 'H' if h_score > a_score else ('A' if a_score > h_score else 'D'),
-                    'HY': hy, 'AY': ay, 'HR': hr, 'AR': ar
-                })
+                    match_list.append({
+                        'Date': match.get('kickoff_time'),
+                        'HomeTeam': h_name, 'AwayTeam': a_name,
+                        'FTHG': h_score, 'FTAG': a_score, 
+                        'FTR': 'H' if h_score > a_score else ('A' if a_score > h_score else 'D'),
+                        'HY': hy, 'AY': ay, 'HR': hr, 'AR': ar
+                    })
 
         df = pd.DataFrame(match_list)
         if df.empty: return generate_mock_data()
@@ -165,7 +157,6 @@ def load_all_data():
         return df, team_logos, team_players, all_player_images
 
     except Exception:
-        # Ne hata olursa olsun, sessizce mock dataya geç
         return generate_mock_data()
 
 def get_advanced_stats(df, team_players, team, last_n=5):

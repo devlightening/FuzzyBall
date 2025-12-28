@@ -9,7 +9,7 @@ from data_utils import load_all_data, get_advanced_stats
 from fuzzy_system import match_sim, card_sim, form, rank, goals, result, aggression, tension, chaos
 
 # --- SAYFA AYARLARI ---
-st.set_page_config(page_title="FuzzyBed Predictor", page_icon="⚽", layout="wide")
+st.set_page_config(page_title="FUZZYBED PREDICTOR", page_icon="⚽", layout="wide")
 
 # --- DİL SÖZLÜĞÜ (TRANSLATION DICTIONARY) ---
 TRANS = {
@@ -52,12 +52,14 @@ TRANS = {
         "loading_error": "Veri kaynağına erişilemedi.",
         "slot_msg": "OYUNCULAR VE VERİLER ANALİZ EDİLİYOR...",
         
-        # TABLO BAŞLIKLARI
+        # YENİ EKLENEN BUTON VE BAŞLIKLAR
+        "refresh_btn": "🔄 VERİLERİ YENİLE",
+        "refresh_desc": "Sonuçlar güncel değilse tıklayın.",
+        
         "tbl_team": "TAKIM",
         "tbl_input": "GİRİŞ DEĞERİ",
         "tbl_decision": "BASKIN KARAR",
         
-        # BULANIK TERİM ÇEVİRİLERİ (Kod içindeki değişken adlarını Türkçeye çevirir)
         "terms": {
             "kotu": "KÖTÜ", "orta": "ORTA", "iyi": "İYİ",
             "dusuk": "DÜŞÜK", "yuksek": "YÜKSEK",
@@ -104,12 +106,14 @@ TRANS = {
         "loading_error": "Unable to access data source.",
         "slot_msg": "ANALYZING PLAYERS AND DATA...",
 
-        # TABLE HEADERS
+        # NEW BUTTON AND HEADERS
+        "refresh_btn": "🔄 REFRESH DATA",
+        "refresh_desc": "Click if results are outdated.",
+
         "tbl_team": "TEAM",
         "tbl_input": "INPUT VALUE",
         "tbl_decision": "DOMINANT DECISION",
 
-        # FUZZY TERM TRANSLATIONS
         "terms": {
             "kotu": "POOR", "orta": "AVERAGE", "iyi": "GOOD",
             "dusuk": "LOW", "yuksek": "HIGH",
@@ -119,10 +123,19 @@ TRANS = {
     }
 }
 
-# --- DİL SEÇİMİ (SIDEBAR) ---
+# --- DİL SEÇİMİ VE YENİLEME BUTONU (SIDEBAR) ---
 st.sidebar.markdown("## 🌍 Language / Dil")
 selected_lang = st.sidebar.radio("", ["TR", "EN"], index=0) 
 T = TRANS[selected_lang]
+
+st.sidebar.markdown("---")
+st.sidebar.markdown(f"## 🛠️ Data / Veri")
+st.sidebar.caption(T["refresh_desc"])
+
+# --- YENİLEME BUTONU MANTIĞI ---
+if st.sidebar.button(T["refresh_btn"]):
+    st.cache_data.clear() # Önbelleği temizle
+    st.rerun()            # Uygulamayı yeniden başlat
 
 # --- CSS TASARIMI ---
 st.markdown("""
@@ -182,28 +195,22 @@ def plot_fuzzy_chart(var, sim, title, color_hex, val=None):
 
 # --- DİNAMİK DİL DESTEKLİ TABLO FONKSİYONU ---
 def display_fuzzy_table(var, val_home, val_away, name_home, name_away, lang_dict):
-    # Verileri tutacak liste
     rows = []
 
     def get_row_data(team_name, val):
-        # Başlıkları çeviriden al
         row = {lang_dict["tbl_team"]: team_name, lang_dict["tbl_input"]: val}
         max_degree = 0
         dominant_label = ""
         
         for label in var.terms:
             degree = fuzz.interp_membership(var.universe, var.terms[label].mf, val)
-            
-            # Terimi sözlükten çevir (örn: kotu -> POOR veya KÖTÜ)
             translated_label = lang_dict["terms"].get(label, label.upper())
-            
             row[translated_label] = f"{degree:.2f}"
             
             if degree > max_degree:
                 max_degree = degree
                 dominant_label = translated_label
         
-        # Baskın kararı ekle
         row[lang_dict["tbl_decision"]] = f"{dominant_label} (%{int(max_degree*100)})"
         return row
 
@@ -213,7 +220,7 @@ def display_fuzzy_table(var, val_home, val_away, name_home, name_away, lang_dict
     df = pd.DataFrame(rows)
     st.dataframe(df, hide_index=True, use_container_width=True)
 
-# --- SLOT MAKİNESİ (FREESPIN) EFEKTİ - ÇEVİRİLİ ---
+# --- SLOT MAKİNESİ (FREESPIN) EFEKTİ ---
 def run_slot_effect(player_images, text_msg):
     slot_container = st.empty()
     for i in range(20):
@@ -293,7 +300,6 @@ with b2:
 if start:
     if h_team == a_team: st.warning(T["warning_same_team"])
     else:
-        # Slot makinesine dil sözlüğündeki metni gönder
         run_slot_effect(player_images, T["slot_msg"])
         
         with st.spinner(T["spinner"]):
@@ -356,7 +362,6 @@ if start:
             st.markdown(f"""<div style="text-align:center; margin-bottom:20px;"><span style="color:#00f260; font-size:1.5rem; font-weight:bold; margin-right:20px;">🏠 {h_team}</span><span style="color:#666; font-size:1.2rem;">VS</span><span style="color:#00c6ff; font-size:1.5rem; font-weight:bold; margin-left:20px;">✈️ {a_team}</span></div>""", unsafe_allow_html=True)
             st.info(T["graph_info"])
             
-            # --- FORM ANALİZİ ---
             st.markdown(f"### 📈 {T['g_form']}")
             match_sim.input['form'] = h_stats['fuzzy']['form']; match_sim.input['rank'] = h_stats['fuzzy']['rank']; match_sim.input['goals'] = h_stats['fuzzy']['goals']; match_sim.compute()
             fig_h_form = plot_fuzzy_chart(form, match_sim, f"{T['home']}: {h_stats['fuzzy']['form']}", "#00f260", val=h_stats['fuzzy']['form'])
@@ -367,12 +372,10 @@ if start:
             c1, c2 = st.columns(2)
             c1.pyplot(fig_h_form)
             c2.pyplot(fig_a_form)
-            # Tabloya da 'T' (dil sözlüğü) gönderiyoruz
             display_fuzzy_table(form, h_stats['fuzzy']['form'], a_stats['fuzzy']['form'], h_team, a_team, T)
             
             st.markdown("---")
 
-            # --- RANK ANALİZİ ---
             st.markdown(f"### 🏆 {T['g_rank']}")
             fig_h_rank = plot_fuzzy_chart(rank, match_sim, f"{T['home']}: {h_stats['fuzzy']['rank']}", "#00f260", val=h_stats['fuzzy']['rank'])
             fig_a_rank = plot_fuzzy_chart(rank, match_sim, f"{T['away']}: {a_stats['fuzzy']['rank']}", "#00c6ff", val=a_stats['fuzzy']['rank'])
@@ -384,7 +387,6 @@ if start:
 
             st.markdown("---")
 
-            # --- GOL ANALİZİ ---
             st.markdown(f"### ⚽ {T['g_goals']}")
             fig_h_goals = plot_fuzzy_chart(goals, match_sim, f"{T['home']}: {h_stats['fuzzy']['goals']}", "#00f260", val=h_stats['fuzzy']['goals'])
             fig_a_goals = plot_fuzzy_chart(goals, match_sim, f"{T['away']}: {a_stats['fuzzy']['goals']}", "#00c6ff", val=a_stats['fuzzy']['goals'])
@@ -396,7 +398,6 @@ if start:
             
             st.markdown("---")
             
-            # --- SONUÇ ---
             st.markdown(f"<h4 style='text-align:center;'>{T['final_res']}</h4>", unsafe_allow_html=True)
             match_sim.input['form'] = h_stats['fuzzy']['form']; match_sim.input['rank'] = h_stats['fuzzy']['rank']; match_sim.input['goals'] = h_stats['fuzzy']['goals']; match_sim.compute()
             fig_h_res = plot_fuzzy_chart(result, match_sim, T["g_result"].format(h_team), "#ffffff")
